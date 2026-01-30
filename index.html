@@ -1,0 +1,191 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WallHaven - Premium Wallpapers</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; }
+        .masonry { column-gap: 1.5rem; }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+    </style>
+
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 w-full z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2 font-bold text-xl">
+            <div class="w-8 h-8 bg-indigo-600 text-white flex items-center justify-center rounded">
+                <i class="fas fa-image"></i>
+            </div>
+            WallHaven
+        </div>
+
+        <input id="searchInput" type="text"
+            placeholder="ওয়ালপেপার সার্চ করুন..."
+            class="hidden md:block px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 outline-none">
+
+        <button onclick="toggleModal('uploadModal')"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm">
+            <i class="fas fa-plus"></i> আপলোড
+        </button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="mt-16 h-[380px] relative flex items-center justify-center text-white">
+    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2000"
+         class="absolute inset-0 w-full h-full object-cover opacity-50">
+    <div class="relative text-center">
+        <h1 class="text-4xl sm:text-6xl font-extrabold mb-4">
+            সেরা স্টক ওয়ালপেপার
+        </h1>
+        <p class="text-lg text-gray-200">
+            মোবাইল ও ডেস্কটপের জন্য হাই কোয়ালিটি ছবি
+        </p>
+    </div>
+</section>
+
+<!-- CATEGORY -->
+<div class="sticky top-16 bg-white dark:bg-gray-900 border-b z-30">
+    <div id="categoryContainer" class="max-w-7xl mx-auto px-4 py-4 flex gap-3 overflow-x-auto"></div>
+</div>
+
+<!-- GALLERY -->
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <div id="gallery" class="masonry columns-1 sm:columns-2 lg:columns-3 xl:columns-4"></div>
+</main>
+
+<!-- UPLOAD MODAL -->
+<div id="uploadModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/70" onclick="toggleModal('uploadModal')"></div>
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl w-full max-w-md relative">
+        <button onclick="toggleModal('uploadModal')" class="absolute top-3 right-3">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h2 class="text-xl font-bold mb-4">ওয়ালপেপার আপলোড</h2>
+
+        <form onsubmit="handleUpload(event)" class="space-y-4">
+            <input type="file" id="imageInput" accept="image/*" required
+                class="w-full">
+
+            <input type="text" id="uploadTitle" placeholder="টাইটেল" required
+                class="w-full px-3 py-2 rounded border dark:bg-gray-800">
+
+            <select id="uploadCat" class="w-full px-3 py-2 rounded border dark:bg-gray-800">
+                <option>Nature</option>
+                <option>Space</option>
+                <option>Neon</option>
+                <option>Minimalist</option>
+            </select>
+
+            <button class="w-full bg-indigo-600 text-white py-2 rounded font-bold">
+                পাবলিশ
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- SCRIPT -->
+<script>
+let wallpapers = [
+    {id:1,title:"Misty Mountains",category:"Nature",url:"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200"},
+    {id:2,title:"Neon City",category:"Neon",url:"https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=1200"},
+    {id:3,title:"Deep Space",category:"Space",url:"https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200"},
+    {id:4,title:"Tokyo Night",category:"Neon",url:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200"},
+];
+
+const categories = ["All","Nature","Space","Neon","Minimalist"];
+let selectedCat = "All";
+
+function renderCategories(){
+    categoryContainer.innerHTML = categories.map(c=>`
+        <button onclick="filterCategory('${c}')"
+        class="px-5 py-2 rounded-full text-sm ${
+            selectedCat===c?"bg-indigo-600 text-white":"bg-gray-200 dark:bg-gray-800"
+        }">${c}</button>
+    `).join("");
+}
+
+function renderGallery(){
+    const search = searchInput.value.toLowerCase();
+    gallery.innerHTML = wallpapers.filter(w =>
+        (selectedCat==="All"||w.category===selectedCat) &&
+        w.title.toLowerCase().includes(search)
+    ).map(w=>`
+        <div class="masonry-item group relative overflow-hidden rounded-xl">
+            <img src="${w.url}" class="w-full group-hover:scale-105 transition">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-end p-4">
+                <div class="flex justify-between w-full text-white">
+                    <span>${w.title}</span>
+                    <button onclick="downloadImage('${w.url}','${w.title}')"
+                        class="bg-white/20 p-2 rounded-full">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join("");
+}
+
+/* ✅ WORKING DOWNLOAD */
+function downloadImage(url, title){
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = title.replace(/\s+/g,"-").toLowerCase()+".jpg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function filterCategory(c){
+    selectedCat = c;
+    renderCategories();
+    renderGallery();
+}
+
+function toggleModal(id){
+    document.getElementById(id).classList.toggle("hidden");
+}
+
+function handleUpload(e){
+    e.preventDefault();
+    const file = imageInput.files[0];
+    const imgURL = URL.createObjectURL(file);
+
+    wallpapers.unshift({
+        id:Date.now(),
+        title:uploadTitle.value,
+        category:uploadCat.value,
+        url:imgURL
+    });
+
+    renderGallery();
+    toggleModal("uploadModal");
+    e.target.reset();
+}
+
+searchInput.addEventListener("input",renderGallery);
+
+renderCategories();
+renderGallery();
+</script>
+
+</body>
+</html>
